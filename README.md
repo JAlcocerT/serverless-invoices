@@ -1,6 +1,6 @@
 Forked from https://github.com/mokuappio/serverless-invoices
 
-> Added Makefile for one command [setup](#project-setup)
+> Added Makefile for one command [setup](#project-setup) and deployed statically to Cloudflare Pages: <https://serverless-invoices.pages.dev/>
 
 ---
 

@@ -23,3 +23,5 @@ yarn-error.log*
 src/config/app.config.js
 public/.htaccess
 vue.config.js
+
+.wrangler/

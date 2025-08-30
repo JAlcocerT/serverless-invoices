@@ -64,25 +64,33 @@ If you place it in `public/`, it will be copied into `dist/` during build.
 Use Wrangler to deploy the static `dist/` directory.
 
 - First deploy (will create the Pages project if missing):
-  ```bash
-  wrangler pages deploy dist --project-name=serverless-invoices --branch=main
-  ```
+
+```bash
+wrangler pages deploy dist --project-name=serverless-invoices --branch=main
+```
   Notes:
   - `--project-name` must be unique in your account.
   - `--branch` is used to label the deployment; use `production` or your current branch name.
 
 - Subsequent deploys:
-  ```bash
-  wrangler pages deploy dist
-  ```
+
+```bash
+wrangler pages deploy dist
+```
+
+> It will deploy to something like `https://8041cf56.serverless-invoices.pages.dev/`
+
+> > And later on available at `https://serverless-invoices.pages.dev/invoices?lang=en`
 
 Wrangler outputs the preview and production URLs. Promote a preview in the dashboard or deploy with `--branch=production` to target the production environment directly.
 
 ## 4) Optional: GitHub integration (CI)
+
 Instead of local deploys, you can connect the repository to Cloudflare Pages. Set the build command and output dir:
 - Build command: `npm run build`
 - Output directory: `dist`
 - Root directory: repository root
+
 Make sure `_redirects` is present in the published output.
 
 ## Environment and configuration
