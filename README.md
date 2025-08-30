@@ -37,7 +37,7 @@ Built with [Vue.js](https://vuejs.org/) and [Bootstrap](https://getbootstrap.com
   - Edit default company details
   - Custom fields
   - Default taxes
-- **Export & import json data**
+- **Export & import json data**: See `serverless-invoices-example.json`
 - Dark and light mode!
 - Multilingual
 - PWA support 
