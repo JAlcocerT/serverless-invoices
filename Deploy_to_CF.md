@@ -13,9 +13,11 @@ wrangler login
 ```
 
 ## 1) Build the app
-You can build with Node locally or using Docker.
+
+You can build with Node locally or alternatively, using Docker.
 
 - Local build:
+
 ```bash
 npm install
 npm run build
@@ -26,22 +28,39 @@ npm run build
 
 ```bash
 docker build . -t serverless-invoices
+```
+
+```sh
 # Copy build artifacts out of the image
-CID=$(docker create serverless-invoices)
-docker cp "$CID":/app/dist ./dist
-docker rm "$CID"
+# CID=$(docker create serverless-invoices)
+# docker cp "$CID":/app/dist ./dist
+# docker rm "$CID"
+docker cp serverless-invoices:/app/dist ./dist
+```
+
+Optionally: test that the build works
+
+```bash
+npx serve -s dist -l 8080
+#python3 -m http.server 8080 --directory dist
 ```
 
 ## 2) Configure SPA routing (history mode)
-Vue router uses history mode. Add a catch-all redirect so direct links work on Pages.
+
+Vue router uses history mode. 
+
+Add a catch-all redirect so direct links work on Pages.
 
 Create a `_redirects` file at the project root or in `public/` before build:
+
 ```
 /*  /index.html  200
 ```
+
 If you place it in `public/`, it will be copied into `dist/` during build.
 
 ## 3) Deploy with Wrangler (Direct Upload)
+
 Use Wrangler to deploy the static `dist/` directory.
 
 - First deploy (will create the Pages project if missing):
