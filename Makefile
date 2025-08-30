@@ -1,7 +1,7 @@
 # Makefile to build and run Serverless Invoices via Docker as per README.md
 
 # Configurable vars
-IMAGE ?= mokuappio/serverless-invoices
+IMAGE ?= serverless-invoices
 CONTAINER ?= serverless-invoices
 HOST_PORT ?= 80
 CONTAINER_PORT ?= 8080
