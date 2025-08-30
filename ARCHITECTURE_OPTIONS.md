@@ -69,6 +69,7 @@ It also covers full‑stack options and serverless add‑ons.
 - Server-side: Puppeteer/Playwright (headless Chrome) or wkhtmltopdf. Pros: consistent PDFs, batch generation, background jobs; Cons: runtime/infra required.
 
 ## Auth and data considerations
+
 - SPA + local storage: single-user per browser context; export/import for migration.
 - Multi-user, shared data: need backend + DB (or BaaS: Supabase/Firebase/Cognito/Auth0).
 - Security: keep secrets server-side (functions or backend), not in client.

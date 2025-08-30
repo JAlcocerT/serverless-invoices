@@ -1,4 +1,4 @@
-Forked from https://github.com/mokuappio/serverless-invoices
+Forked from https://github.com/mokuappio/serverless-invoices as a very interesting [OSS project for invoice creation](https://fossengineer.com/open-source-invoice-creator/)
 
 > Added Makefile for one command [setup](#project-setup) and deployed statically to Cloudflare Pages: <https://serverless-invoices.pages.dev/>
 

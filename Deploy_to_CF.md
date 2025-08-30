@@ -38,6 +38,12 @@ docker build . -t serverless-invoices
 docker cp serverless-invoices:/app/dist ./dist
 ```
 
+```sh
+docker create --name temp-build serverless-invoices:latest
+docker cp temp-build:/app/dist ./dist
+docker rm temp-build
+```
+
 Optionally: test that the build works
 
 ```bash
