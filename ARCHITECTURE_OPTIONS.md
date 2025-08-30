@@ -39,6 +39,8 @@ It also covers full‑stack options and serverless add‑ons.
 - Good for: Dynamic, SEO-critical apps; personalized dashboards with fast TTFB.
 - With Vue: Nuxt (SSR mode).
 
+> Clarification: SSR is not inherently "full‑stack". SSR means HTML is rendered on a server/edge per request and can consume third‑party/headless APIs without you owning a backend. "Full‑stack" means you control backend logic, data, and APIs; it can be combined with SSR, SPA, or SSG depending on UX/SEO needs.
+
 ### 4) Hybrid/Edge/ISR
 
 - Mix SSG + SPA hydration + on‑demand revalidation (ISR) or edge rendering.
@@ -80,11 +82,11 @@ It also covers full‑stack options and serverless add‑ons.
 
 ## Decision guide (quick matrix)
 
-- Mostly static routes + strong SEO: choose SSG (Nuxt static, Astro+Vue, VitePress).
-- Heavy interactivity/offline + minimal backend: choose SPA (current approach).
-- Dynamic + SEO critical + per-user: choose SSR or Hybrid (Nuxt SSR/ISR).
-- Need occasional server features but want static hosting: SPA/SSG + serverless functions.
-- High-fidelity, consistent PDFs or emailing at scale: add server/worker-based PDF.
+- Mostly static routes + strong SEO: choose **SSG** (Nuxt static, Astro+Vue, VitePress).
+- Heavy interactivity/offline + minimal backend: choose **SPA** (current approach).
+- Dynamic + SEO critical + per-user: choose **SSR** or Hybrid (Nuxt SSR/ISR).
+- Need occasional server features but want static hosting: **SPA/SSG + serverless functions**.
+- High-fidelity, consistent PDFs or emailing at scale: add **server/worker-based PDF**.
 
 ## Example stacks
 
@@ -92,6 +94,59 @@ It also covers full‑stack options and serverless add‑ons.
 - SPA + serverless: Vue + CF Workers for email/webhooks; keep data local or use KV/D1.
 - SSG site with interactive islands: Astro (+Vue) for marketing/docs, plus a separate SPA tool.
 - Full-stack: Nuxt (SSR) + FastAPI (APIs) + Postgres; server-generated PDFs via Puppeteer.
+
+## SPA + Webhook examples
+
+These patterns let you keep the UI as a static SPA while reacting to external events via webhooks (Cloudflare Pages Functions/Workers, Netlify Functions, Vercel Functions).
+
+- __Auth gating with Logto__
+  - Flow: User signs in via Logto → Logto emits webhook on sign-in or role change → your Function verifies the event and persists an access flag (e.g., CF KV/D1) → SPA calls a lightweight `/api/me` endpoint to read allowed pages/features.
+  - Client: store ID token in memory; call `/api/me` to resolve roles/entitlements; conditionally allow routes (navigation guards) or show a paywall screen.
+  - Notes: Keep secrets (Logto webhook secret, token verifier) in Function env vars. Do not embed in client.
+
+- __Auth gating with PocketBase__
+  - Flow: PocketBase fires webhook on collection auth or membership update → Function upserts `userId → accessLevel` into KV/D1 → SPA checks `/api/me` on load/route change.
+  - Alternative: SPA authenticates directly with PocketBase SDK, but still use a Function to proxy sensitive checks or to map roles → feature flags without leaking admin tokens.
+
+- __MailerLite subscription unlock__
+  - Flow: User subscribes or gets tagged in MailerLite → webhook to Function → mark `userEmail → subscribed=true` in KV/D1 → SPA calls `/api/access?email=` to determine if restricted routes/components are visible.
+  - Use cases: Show premium templates, unlock “Export to CSV”, or enable an “Invoices > Analytics” page for subscribers.
+
+- __Stripe checkout → feature unlock__
+  - Flow: Stripe `checkout.session.completed` webhook → Function records entitlement (plan/limits) → SPA reads entitlements via `/api/me` and toggles features (e.g., more clients/invoices, remove watermark, server‑side email credits).
+
+- __Incoming email/webhook to attach to invoices__
+  - Flow: Receive email/webhook (e.g., via Mailgun/Webhook.site/Zapier) → Function parses payload and stores metadata in D1/R2 → SPA fetches attachments/notes via `/api/invoices/:id/attachments` and displays them.
+
+Implementation tips:
+- Keep a single read endpoint like `/api/me` that returns roles/entitlements; client stays simple and avoids coupling to each provider.
+- Prefer CF KV/D1 (or Netlify/Vercel equivalents) for small state; rotate webhook secrets; validate signatures; implement idempotency.
+- In the SPA, guard routes using a central check (e.g., Vue Router `beforeEach`) and render skeletons while `/api/me` resolves.
+
+## How this relates to JAMstack and SSGs
+
+JAMstack (static frontends + APIs + markup) and SPAs can share the same serverless/webhook backbone:
+
+- __Same backend primitives__: Functions (Cloudflare Pages Functions/Workers, Netlify/Vercel Functions), edge storage (KV/D1), and provider webhooks (Logto, PocketBase, MailerLite, Stripe) work for both SPA and SSG.
+- __Content freshness__:
+  - SSG: webhooks can trigger rebuilds or ISR/revalidation to refresh static pages.
+  - SPA: webhooks typically update small state in KV/DB that the client reads at runtime via `/api/me` (or similar).
+- __Auth/content gating__:
+  - SPA: gate in the client after calling `/api/me`; conditionally allow routes/components.
+  - SSG/Hybrid: gate at the edge/server (middleware/function) before serving a page, or render public shells that hydrate and fetch `/api/me` for entitlements. Hybrid (e.g., Nuxt with ISR) can pre-render public content and verify private parts per-request.
+- __SEO and UX split__: Use SSG for marketing/docs and SPA for private dashboards/tools. Webhooks keep static marketing fresh (e.g., MailerLite tag change → revalidate a page), while private areas remain dynamic.
+- __Shared backend, split frontends__: It’s common to host a docs/marketing SSG (Astro/VitePress/Nuxt static) alongside a separate SPA tool; both consume the same Functions/webhook pipeline and storage.
+
+## Comparison: SPA, PWA, SPA + Webhooks, SSG, JAMstack, SSR (full‑stack)
+
+| Model | What it is | Pros | Cons | Good for | Typical hosting/runtime |
+| --- | --- | --- | --- | --- | --- |
+| SPA | Client‑side rendered app; one `index.html`, routes in browser | Simple hosting, rich UX, offline possible, minimal infra | Larger initial JS, SEO needs care, auth done client‑side | Tools, dashboards, single‑user/private apps | Static host (CF Pages/Netlify/Vercel) + SPA fallback |
+| PWA | SPA/SSG with Service Worker + manifest for offline/install | Offline/cache, installable, better UX | SW complexity, cache invalidation, browser quirks | Field apps, recurring tools, low‑connectivity use | Same as SPA/SSG + Service Worker |
+| SPA + Webhooks | SPA UI + serverless functions reacting to provider webhooks; small state in KV/DB; client reads via `/api/me` | Keep static hosting; entitlements/auth/events without full backend; low cost | Extra moving parts (functions, secrets, KV); client gating (not true server auth) | Feature unlocks, subscription gates, light auth/roles, Stripe/MailerLite/Logto/PocketBase events | Static host + Functions (CF Workers/Pages Functions, Netlify/Vercel) + KV/D1 |
+| SSG | Pages pre‑rendered at build time | Great SEO/TTFB, CDN‑only, predictable costs | Rebuilds for content changes (unless ISR); dynamic per‑user needs client fetch | Marketing/docs, blogs, mostly static content | Static host; optional ISR/edge revalidation |
+| JAMstack | Architecture: static frontends + APIs + serverless; can be SPA or SSG | Scales via CDN, decoupled services, strong DX | Requires integration glue (webhooks/functions), service sprawl | Sites/apps that mix static + APIs; headless CMS | Static host + Functions + external APIs (headless CMS, auth, payments) |
+| SSR (full‑stack) | HTML rendered per request (server/edge) with API/backend | Fast first render, great SEO for dynamic routes, secure server auth, streaming | Needs runtime/server, higher ops complexity/cost | Multi‑user SaaS, personalized content, complex auth | App platform (Node SSR: Nuxt/Next/Nest/Express) on server/edge |
 
 ## Migration ideas from this repo
 

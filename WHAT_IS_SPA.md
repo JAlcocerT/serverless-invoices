@@ -1,6 +1,6 @@
 # What is a Single-Page Application (SPA)?
 
-A Single-Page Application is a web app that loads a single HTML page and updates the UI dynamically in the browser using JavaScript, without full-page reloads.
+A **Single-Page Application is a web app** that loads a single HTML page and updates the UI dynamically in the browser using JavaScript, without full-page reloads.
 
 ## How it works
 
