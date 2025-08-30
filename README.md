@@ -95,6 +95,8 @@ npm run serve
 npm run build
 ```
 
+> Note: The SPA history routing fallback is included automatically via `public/_redirects` so that static hosts (e.g., Cloudflare Pages, Netlify) serve `index.html` for deep links. This ensures Vue Router in history mode works after refreshes and direct URL visits.
+
 ### Lints and fixes files
 ```
 npm run lint
@@ -118,6 +120,12 @@ echo "alias serverless-invoices='docker run -p 80:8080 -d --rm serverless-invoic
 source ~/.zshrc
 serverless-invoices
 ```
+
+## Documentation
+
+- [Deploy to Cloudflare Pages](./Deploy_to_CF.md)
+- [What is a SPA?](./WHAT_IS_SPA.md)
+- [Architecture Options](./ARCHITECTURE_OPTIONS.md)
 
 ## Topics
 - invoices management
